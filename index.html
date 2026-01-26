@@ -11,6 +11,12 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .video-container {
+      position: relative;
+      display: inline-block;
     }
 
     img {
@@ -18,13 +24,69 @@
       max-height: 100%;
       /* transform: scaleY(-1); /* vertical flip */
       transform: scale(-1, -1); /* both X & Y */
+      clip-path: inset(3% 0 0 0);
+    }
+
+    .live-indicator {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(220, 38, 38, 0.95);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .eye-icon {
+      width: 14px;
+      height: 14px;
+      filter: brightness(0) invert(1);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
     }
   </style>
 </head>
 <body>
-  <img
-    src="https://camera.saylermag.com/cgi-bin/mjpg/video.cgi"
-    alt="Live Camera Feed"
-  />
+  <div class="video-container">
+    <img
+      src="https://camera.saylermag.com/cgi-bin/mjpg/video.cgi"
+      alt="Live Camera Feed"
+    />
+    <div class="live-indicator">
+      <div class="live-dot"></div>
+      LIVE
+      <span style="margin-left: 8px; opacity: 0.8;">|</span>
+      <img src="eye.png" alt="Viewers" class="eye-icon" />
+      <span id="viewer-count">0</span>
+    </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
