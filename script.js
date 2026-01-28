@@ -1,70 +1,62 @@
-const VIEWER_ENDPOINT = "https://viewer-counter.sullivan-hart7.workers.dev";
-const HEARTBEAT_INTERVAL = 15000;  // 15s keeps viewers accurate
-let heartbeatTimer = null;
+const WS_URL = "wss://live-chat.sullivan-hart7.workers.dev/chat";
+const messagesEl = document.getElementById("messages");
+const nameInput = document.getElementById("name");
+const textInput = document.getElementById("text");
 
-// Join stream
-async function joinViewer() {
+// Create WebSocket
+const ws = new WebSocket(WS_URL);
+
+// --- Connection Events ---
+ws.onopen = () => console.log("[Chat] WebSocket connected to", WS_URL);
+ws.onclose = () => console.log("[Chat] WebSocket closed");
+ws.onerror = (err) => console.error("[Chat] WebSocket error", err);
+
+// --- Add Message to Window ---
+function addMessageToWindow(msg) {
+  if (!msg.ts || !msg.text) return; // ignore viewer_count or malformed messages
+
+  const ts = new Date(msg.ts);
+  const tsString = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const el = document.createElement("div");
+  el.textContent = `[${tsString}] ${msg.text}`;
+  el.style.marginBottom = "4px";
+  messagesEl.appendChild(el);
+
+  // Auto-scroll
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// --- Incoming Messages ---
+ws.onmessage = (e) => {
   try {
-    console.log("[Viewer] Joining stream...");
-    const res = await fetch(VIEWER_ENDPOINT, { method: "POST" });
-    if (res.ok) {
-      console.log("[Viewer] Successfully joined stream");
-    } else {
-      console.warn("[Viewer] Failed to join stream:", res.status, res.statusText);
+    const msg = JSON.parse(e.data);
+
+    switch(msg.type) {
+      case "chat":
+        addMessageToWindow(msg);
+        break;
+
+      case "viewer_count":
+        const el = document.getElementById("viewer-count");
+        if (el) el.textContent = msg.count;
+        break;
+
+      default:
+        console.log("[Chat] Unknown message type:", msg);
     }
-  } catch (e) {
-    console.error("[Viewer] Error joining stream:", e);
+  } catch(err) {
+    console.error("[Chat] Failed to parse WebSocket message:", err);
   }
-}
+};
 
-// Leave stream
-async function leaveViewer() {
-  try {
-    console.log("[Viewer] Leaving stream...");
-    navigator.sendBeacon(VIEWER_ENDPOINT, "");
-    console.log("[Viewer] Sent leave request");
-  } catch (e) {
-    console.error("[Viewer] Error leaving stream:", e);
+// --- Sending Messages ---
+textInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter" && ws.readyState === WebSocket.OPEN && textInput.value.trim()) {
+    const username = nameInput.value || "anon";
+    const payload = { type: "chat", text: `${username}: ${textInput.value.trim()}` };
+    ws.send(JSON.stringify(payload));
+    console.log("[Chat] Sent message:", payload.text);
+    textInput.value = "";
   }
-}
-
-// Get current viewer count
-async function updateViewerCount() {
-  try {
-    console.log("[Viewer] Fetching viewer count...");
-    const res = await fetch(VIEWER_ENDPOINT);
-    const data = await res.json();
-    const el = document.getElementById("viewer-count");
-    if (el) {
-      el.textContent = data.count;
-      console.log("[Viewer] Current count:", data.count);
-    }
-  } catch (e) {
-    console.warn("[Viewer] Viewer count unavailable", e);
-  }
-}
-
-// Heartbeat to stay counted
-function startHeartbeat() {
-  console.log("[Viewer] Starting heartbeat every", HEARTBEAT_INTERVAL / 1000, "seconds");
-  heartbeatTimer = setInterval(async () => {
-    try {
-      console.log("[Viewer] Sending heartbeat...");
-      const res = await fetch(VIEWER_ENDPOINT, { method: "PUT" });
-      if (!res.ok) console.warn("[Viewer] Heartbeat failed:", res.status);
-    } catch (e) {
-      console.error("[Viewer] Heartbeat error:", e);
-    }
-  }, HEARTBEAT_INTERVAL);
-}
-
-// Lifecycle
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[Viewer] DOM loaded, initializing...");
-  await joinViewer();
-  startHeartbeat();
-  updateViewerCount();
-  setInterval(updateViewerCount, 5000);
 });
-
-window.addEventListener("beforeunload", leaveViewer);

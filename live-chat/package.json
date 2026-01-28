@@ -1,5 +1,5 @@
 {
-	"name": "viewer-counter",
+	"name": "live-chat",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -8,6 +8,6 @@
 		"start": "wrangler dev"
 	},
 	"devDependencies": {
-		"wrangler": "^4.60.0"
+		"wrangler": "^4.61.0"
 	}
 }

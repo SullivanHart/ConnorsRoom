@@ -1,0 +1,40 @@
+/**
+ * Wrangler configuration for Live Chat Worker
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "live-chat",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-27",
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHAT",
+        "class_name": "ChatRoom"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ChatRoom"]
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+
+  /**
+   * Optional extras you can enable later
+   */
+
+  // "placement": { "mode": "smart" },
+
+  // "vars": {
+  //   "MAX_MESSAGE_LENGTH": "200"
+  // }
+}
