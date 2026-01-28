@@ -92,6 +92,7 @@ body {
   margin-bottom: 8px;
 }
 
+/* Stack inputs vertically always */
 #chat input {
   background: #222;
   border: none;
@@ -100,6 +101,7 @@ body {
   margin-top: 4px;
   border-radius: 4px;
   font-size: 14px;
+  width: 100%;
 }
 
 #chat input:focus {
@@ -107,7 +109,7 @@ body {
   background: #2a2a2a;
 }
 
-/* Mobile (Twitch-style stack) */
+/* Mobile responsiveness */
 
 @media (max-width: 768px) {
   .layout {
