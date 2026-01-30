@@ -28,8 +28,8 @@ body {
 .video-container img {
   max-width: 100%;
   max-height: 100%;
-  transform: scale(-1, -1);
-  clip-path: inset(3% 0 0 0);
+  /* transform: scale(-1, -1); */
+  /* clip-path: inset(3% 0 0 0); */
 }
 
 /* Live badge */

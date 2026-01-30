@@ -60,3 +60,26 @@ textInput.addEventListener("keypress", (e) => {
     textInput.value = "";
   }
 });
+
+// --- Refresh Camera --- 
+const img = document.getElementById("camera");
+
+let loading = false;
+
+async function refreshFrame() {
+  if (loading) return;
+  loading = true;
+
+  const next = new Image();
+  next.onload = () => {
+    img.src = next.src;   // atomic swap
+    loading = false;
+  };
+  next.onerror = () => {
+    loading = false;
+  };
+
+  next.src = "https://camera-proxy.sullivan-hart7.workers.dev/snapshot?t=" + Date.now();
+}
+
+setInterval(refreshFrame, 200);
