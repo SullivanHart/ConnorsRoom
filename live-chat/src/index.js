@@ -1,9 +1,12 @@
-const HISTORY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const HISTORY_WINDOW_MS = 60 * 60 * 1000 * 4; // 4 hours
 
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     console.log("[Worker] Incoming request:", url.pathname, req.headers.get("Upgrade"));
+
+    // Admin console
+
 
     // WebSocket chat + viewer count
     if (url.pathname === "/chat") {
@@ -39,19 +42,21 @@ export class ChatRoom {
     this.messages = [];
     console.log("[ChatRoom] ChatRoom instance created");
 
+	this.lastBroadcastCount = 0;
+	this.lastBroadcastTs = 0;
+
     // Load persisted messages
     this.state.blockConcurrencyWhile(async () => {
       this.messages = (await this.state.storage.get("messages")) || [];
       console.log("[ChatRoom] Loaded messages:", this.messages.length);
     });
 
-    // Broadcast viewer count every 5s
-    setInterval(() => {
-      const msg = { type: "viewer_count", count: this.clients.size };
-      for (const ws of this.clients.values()) {
-        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
-      }
-    }, 5000);
+	setInterval(() => {
+	const count = this.clients.size;
+	if (count !== this.lastBroadcastCount) {
+		this.broadcastViewerCount();
+	}
+	}, 60000); // 60s safety sync
   }
 
   async fetch(req) {
@@ -75,13 +80,11 @@ export class ChatRoom {
     // Assign unique clientId
     const clientId = crypto.randomUUID();
     this.clients.set(clientId, server);
+	this.broadcastViewerCount();
     console.log("[ChatRoom] WS connected, clients count:", this.clients.size);
 
     // Send recent history
     this.sendRecentHistory(server);
-
-    // Send current viewer count
-    server.send(JSON.stringify({ type: "viewer_count", count: this.clients.size }));
 
     // Handle incoming messages
     server.addEventListener("message", async (event) => {
@@ -110,11 +113,13 @@ export class ChatRoom {
     // Handle disconnects
     server.addEventListener("close", () => {
       this.clients.delete(clientId);
+	  this.broadcastViewerCount();
       console.log("[ChatRoom] WS disconnected, clients count:", this.clients.size);
     });
 
     server.addEventListener("error", (err) => {
       this.clients.delete(clientId);
+	  this.broadcastViewerCount();
       console.error("[ChatRoom] WS error:", err);
     });
 
@@ -134,4 +139,20 @@ export class ChatRoom {
     for (const msg of recent) ws.send(JSON.stringify({ type: "chat", ...msg }));
     console.log("[ChatRoom] Sent", recent.length, "messages to new client");
   }
+
+  broadcastViewerCount() {
+	const count = this.clients.size;
+	const payload = JSON.stringify({ type: "viewer_count", count });
+
+	for (const ws of this.clients.values()) {
+		if (ws.readyState === WebSocket.OPEN) {
+		ws.send(payload);
+		}
+	}
+
+	this.lastBroadcastCount = count;
+	this.lastBroadcastTs = Date.now();
+
+	console.log("[ChatRoom] Broadcast viewer count:", count);
+	}
 }
