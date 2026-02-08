@@ -1,4 +1,4 @@
-const HISTORY_WINDOW_MS = 60 * 60 * 1000 * 4; // 4 hours
+const HISTORY_WINDOW_MS = 60 * 60 * 1000 * 12; // 12 hours
 
 export default {
   async fetch(req, env) {

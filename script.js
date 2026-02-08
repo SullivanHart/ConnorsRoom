@@ -79,7 +79,11 @@ async function refreshFrame() {
     loading = false;
   };
 
-  next.src = "https://camera-proxy.sullivan-hart7.workers.dev/snapshot?t=" + Date.now();
+  if ( Math.floor( Math.random() * 1500 ) === 477 ) {
+      next.src = "./temp_room.png";
+  } else {
+      next.src = "https://camera-proxy.sullivan-hart7.workers.dev/snapshot?t=" + Date.now();
+    }
 }
 
 setInterval(refreshFrame, 200);
