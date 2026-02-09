@@ -81,6 +81,7 @@ async function refreshFrame() {
 
   if ( Math.floor( Math.random() * 1500 ) === 477 ) {
       next.src = "./temp_room.png";
+      console.log( "Boo!" );
   } else {
       next.src = "https://camera-proxy.sullivan-hart7.workers.dev/snapshot?t=" + Date.now();
     }
