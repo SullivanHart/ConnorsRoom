@@ -79,7 +79,7 @@ async function refreshFrame() {
     loading = false;
   };
 
-  if ( Math.floor( Math.random() * 1500 ) > 1300 ) {
+  if ( Math.floor( Math.random() * 1500 ) > 1495 ) {
       next.src = "./temp_room.png";
       console.log( "Boo!" );
   } else {
